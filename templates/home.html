@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" type="figure-icon" href="/static/logo-removed-bg.svg">
+    <link rel="stylesheet" href="/static/stylesheet.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <title>GaGex Figures</title>
+</head>
+<body style="background: linear-gradient(to bottom, white, rgba(24, 110, 255, 1));">
+  {% include "header.html" %}
+  {% include "middlepage.html" %}
+  <div class="mb-3 text-center" style="color: red;">
+    {% for message in get_flashed_messages()%}
+        {{ message }}
+    {% endfor %}
+  </div>
+  <hr style="color: black;">
+  <div class="container px-4 py-5" id="featured-3">
+      <h2 class="pb-2 text-center" style="color: rgba(24,110,255,255);">Why Buy From Us?</h2>
+      <div class="row g-4 py-5 row-cols-1 row-cols-lg-3">
+        <div class="feature col container text-center">
+          <div class="feature-icon d-inline-flex align-items-center justify-content-center   fs-2 mb-3">
+            <img src="/static/logo-removed-bg.svg" alt="Bootstrap" width="60" height="60">
+          </div>
+          <p class="fs-5" style="color: black;">At GaGex Anime Figures, we are passionate about bringing your favorite anime characters to life through our exquisite collection of high-quality figures. Our dedication to craftsmanship and authenticity ensures that each piece is meticulously designed, capturing the essence of the characters you love. Whether you're a seasoned collector or just starting your journey, GaGex offers a diverse selection to cater to every anime fan. Join us as we celebrate the vibrant world of anime and help you build your dream collection, one figure at a time!
+
+          </p>
+        </div>
+        <div class="feature col container text-center">
+          <div class="feature-icon d-inline-flex align-items-center justify-content-center fs-2 mb-3">
+            <img src="/static/logo-removed-bg.svg" alt="Bootstrap" width="60" height="60">
+          </div>
+          <p class="fs-5" style="color: black;">Our commitment to customer satisfaction sets us apart from the competition. We understand that purchasing anime figures is not just a transaction but a passion-driven experience. That’s why we provide exceptional customer service to assist you every step of the way. From answering your inquiries to ensuring timely delivery, we strive to make your shopping experience smooth and enjoyable. We also offer a hassle-free return policy, giving you peace of mind with every purchase.</p>
+        </div>
+        <div class="feature col container text-center">
+          <div class="feature-icon d-inline-flex align-items-center justify-content-center fs-2 mb-3">
+              <img src="/static/logo-removed-bg.svg" class="" alt="Bootstrap" width="60" height="60">
+          </div>
+          <p class="fs-5" style="color: black;">
+              Moreover, we continuously update our inventory to include the latest releases and rare finds, ensuring that our customers have access to the newest and most sought-after figures in the market. Our user-friendly website makes browsing and purchasing a breeze, with detailed product descriptions and high-quality images to help you make informed decisions. At GaGex Figures, we are dedicated to helping you build your dream collection with ease and confidence. Shop with us and experience the difference in quality, service, and selection.
+          </p>
+        </div>
+    
+  </div>
+{% include "footer.html" %}
+
+</body>
+</html>

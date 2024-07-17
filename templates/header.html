@@ -1,0 +1,28 @@
+
+
+<nav class="py-2 border-bottom" style="background-color: rgba(24,110,255,255);">
+  <div class="container d-flex justify-content-between align-items-center">
+    <ul class="nav">
+      <li class="nav-item"><a href="{{url_for('home')}}" style="color: white;" class="smooth-transition nav-link px-2 active" aria-current="page">Home</a></li>
+      <li class="nav-item"><a href="{{url_for('cart')}}" style="color: white;" class="smooth-transition nav-link px-2 active" aria-current="page">Cart</a></li>
+      <li class="nav-item"><a href="{{url_for('products')}}" style="color: white;" class="smooth-transition nav-link px-2">Products</a></li>
+
+      <li class="nav-item"><a href="{{url_for('about')}}" style="color: white;" class="smooth-transition nav-link px-2">About</a></li>
+      {% if current_user.username == 'GAGEX' %}
+        <li class="nav-item"><a href="{{url_for('add_product')}}" style="color: white;" class="smooth-transition nav-link px-2">Add Product</a></li>
+      {% endif %}
+    </ul>
+    <div class="mx-auto">
+      <span class="navbar-text" style="color: white;">GaGex Figures <img src="/static/logo-removed-bg.svg" alt="Bootstrap" style="position: relative; left: 2px;" width="25" height="25"></span>
+    </div>
+    <ul class="nav">
+      {% if current_user.is_authenticated %}
+        <li class="nav-item"><a href="{{url_for('logout')}}" style="color: white;" class="smooth-transition nav-link px-2">Logout</a></li>
+        <li class="nav-item"><a href="" style="color: white;" class="smooth-transition nav-link px-2">Hello, {{current_user.username}}</a></li>
+      {% else %}
+        <li class="nav-item"><a href="{{url_for('login')}}" style="color: white;" class="smooth-transition nav-link px-2">Login</a></li>
+        <li class="nav-item"><a href="{{url_for('register')}}" style="color: white;" class="smooth-transition nav-link px-2">Sign up</a></li>
+      {% endif %}
+    </ul>
+  </div>
+</nav>
