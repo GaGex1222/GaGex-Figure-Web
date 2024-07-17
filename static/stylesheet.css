@@ -1,0 +1,42 @@
+
+
+
+.centerform {
+    position: relative;
+    left: 780px;
+  }
+
+.logincenterform {
+    position: relative;
+    left: 717px;
+}
+
+.smooth-transition { 
+    transition: color 0.3s ease; 
+}
+
+.smooth-transition:hover {
+    color: #f00 !important; 
+}
+
+--bs-border-color {
+    color: black;
+}
+
+.typewriter {
+    display: inline-block;
+    width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    animation: 
+        typing 5s,
+        cursor .4s step-end infinite alternate;
+}
+
+@keyframes cursor {
+    50% {border-color: transparent;}
+}
+
+@keyframes typing {
+    from {width: 0}
+}

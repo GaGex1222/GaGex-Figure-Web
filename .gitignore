@@ -17,7 +17,6 @@ venv/
 *.log
 
 # Ignore static files (if dynamically generated)
-static/
 
 # Ignore instance folder (for Flask)
 instance/
