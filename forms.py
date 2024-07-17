@@ -6,7 +6,7 @@ from wtforms.validators import DataRequired, Length
 
 class AddProduct(FlaskForm):
     description = StringField('Description', validators=[DataRequired()], render_kw={'class': 'w-25 custom-label'})
-    price = StringField('Price', validators=[DataRequired()], render_kw={'class': 'w-25 custom-label'})
+    price = IntegerField('Price', validators=[DataRequired()], render_kw={'class': 'w-25 custom-label'})
     img_url = URLField('Image URL', validators=[DataRequired()], render_kw={'class': 'w-25 custom-label'})
     submit = SubmitField('Add')
 

@@ -188,14 +188,26 @@ def cart():
                 item = item[0]
                 item_object = db.session.execute(db.select(Products).where(Products.id == item.item_id)).scalar()
                 cart_items.append(item_object)
-            
+            total_price = 0
             for item in cart_items:
-                print(item.price)
+                total_price += item.price
             print(cart_items)
-            return render_template('cart.html', items=cart_items)
+            return render_template('cart.html', items=cart_items, total_price=total_price)
         else:
             flash('You have to be logged in to use the cart')
             return redirect(url_for('home'))
+
+
+@app.route('/delete-cart-item', methods=['POST', 'GET'])
+def delete_cart_item():
+    item_id = request.args.get('item_id')
+    items_to_delete = db.session.execute(db.select(ShoppingCart).where((ShoppingCart.item_id == item_id) & (ShoppingCart.user_id == current_user.id))).fetchall()
+    for item in items_to_delete:
+        item = item[0]
+        db.session.delete(item)
+        db.session.commit()
+    return redirect(url_for('cart'))
+
 
 @app.route('/about')
 def about():
