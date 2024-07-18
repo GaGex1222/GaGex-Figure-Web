@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <link rel="stylesheet" href="/static/stylesheet.css">
+    {% from 'bootstrap5/form.html' import render_form %}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Shopping Cart</title>
@@ -11,6 +12,7 @@
             background: linear-gradient(to bottom, white, rgba(24, 110, 255, 1));
             min-height: 100vh;
         }
+        
     </style>
 </head>
 <body>
@@ -20,9 +22,21 @@
             <div class="col-6 mx-auto p-3 text-center">
                 <img src="/static/logo-removed-bg.svg" alt="Bootstrap" style="position: relative; left: 2px;" width="400" height="400">
                 <h1 style="color: rgba(24,110,255,255);">Shopping Cart</h1>
-                <p class="typewriter" style="color: rgba(24,110,255,255);">Review Your Selections and Complete Your Purchase for the Ultimate Anime Experience.</p>
+                <p class="typewriter" style="color: rgba(24,110,255,255);">Here you can upload txt files with products seperated by , to add to cart!</p>
+                <form action="{{url_for('cart')}}" method="POST" enctype="multipart/form-data">
+                    {{form.hidden_tag()}}
+                    {{form.file()}}
+                    {{form.submit()}}
+                </form>
+                <p style="color: rgba(24,110,255,255);">Seperate the products with , for best results!</p>
+                <div class="mb-3 text-center" style="color: red;">
+                    {% for message in get_flashed_messages()%}
+                        {{ message }}
+                    {% endfor %}
+                </div>
             </div>
         </div>
+
 
         <div class="container mt-5 mb-5">
             <div class="d-flex justify-content-center row">

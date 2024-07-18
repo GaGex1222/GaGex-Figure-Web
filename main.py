@@ -10,14 +10,17 @@ from sqlalchemy import Integer, String, Text, ForeignKey, text
 from sqlalchemy.exc import IntegrityError
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_gravatar import Gravatar
+from werkzeug.utils import secure_filename
 from dotenv import load_dotenv
-from forms import AddProduct, Register, Login
+from forms import AddProduct, Register, Login, UploadFile
 import os
 import random
 from flask_mail import Mail, Message
 
 load_dotenv()
 login_manager = LoginManager()
+UPLOAD_FOLDER = 'static/uploads'
+ALLOWED_EXTENSIONS = {'xlsx'}
 app = Flask(__name__)
 login_manager.init_app(app=app)
 sql_url = os.getenv('SQL_URL')
@@ -28,6 +31,7 @@ class Base(DeclarativeBase):
 db = SQLAlchemy(model_class=Base)
 app.config['SECRET_KEY'] = SECRET_KEY
 app.config["SQLALCHEMY_DATABASE_URI"] = sql_url
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 db.init_app(app)
 
 @login_manager.user_loader
@@ -55,15 +59,37 @@ class ShoppingCart(db.Model):
     user_id: Mapped[int] = mapped_column(ForeignKey('user.id'), nullable=False)
     item_id: Mapped[int] = mapped_column(ForeignKey('products.id'), nullable=False)
 
+def check_for_double_item_in_cart():
+    all_user_items_in_cart = db.session.execute(db.select(ShoppingCart).where(ShoppingCart.user_id == current_user.id)).fetchall()
+    all_item_ids_in_cart = []
+    for cart in all_user_items_in_cart:
+        cart = cart[0]
+        all_item_ids_in_cart.append(cart.item_id)
+    return all_item_ids_in_cart
+
+
+
+def check_valid_file(filename):
+    if not '.' in filename:
+        return False
+    else:
+        fileename_ext = filename.split('.')[1]
+        if fileename_ext == 'txt':
+            return True
 
 with app.app_context():
     db.create_all()
+    all_prods = []
+    all_prod = db.session.execute(db.select(Products)).fetchall()
+    for prod in all_prod:
+        prod = prod[0]
+        all_prods.append(prod.description)
 @app.route('/')
 def home():
     return render_template('home.html', current_user=current_user)
 
 
-    
+
 
 
 
@@ -168,6 +194,7 @@ def delete_product():
 
 @app.route('/cart', methods=['POST', 'GET'])
 def cart():
+    form = UploadFile()
     user_id = request.args.get('user_id')
     product_id = request.args.get('product_id')
     if not user_id == None:
@@ -182,6 +209,45 @@ def cart():
             return redirect(url_for('cart'))
     else:
         if current_user.is_authenticated:
+            if form.validate_on_submit():
+                file = form.file.data # Get File uploaded by user!
+                if file and check_valid_file(file.filename):
+                    file.save(os.path.join('static/uploads', secure_filename(file.filename)))
+                    with open(os.path.join('static/uploads', file.filename), 'r') as file_of_products:
+                        file_lines = file_of_products.readlines()[0]
+                        products_sperated = file_lines.split(',')
+                        for prod in products_sperated:
+                            prod_whitespace_seperated = prod.split(' ')
+                            for prod_whitespaced in prod_whitespace_seperated:
+                                for p in all_prods:
+                                    print(f'prod_white {prod_whitespaced} p {p}')
+                                    if prod_whitespaced.lower() in p.lower():
+
+                                        product_to_add_to_cart = db.session.execute(db.select(Products).where(Products.description == p)).scalar()
+                                        new_cart_item = ShoppingCart(
+                                            item=p,
+                                            user_id=current_user.id,
+                                            item_id=product_to_add_to_cart.id
+                                        )
+                                        item_ids_in_cart = check_for_double_item_in_cart()
+                                        if new_cart_item.item_id not in item_ids_in_cart:
+                                            db.session.add(new_cart_item)
+                                            db.session.commit()
+
+                                        # db.session.add(new_cart_item)
+                                        # db.session.commit()
+
+                                    
+
+                    flash("File Has Been uploaded, please wait while we check what products are matching the products in your file!")
+                    return redirect(url_for('cart'))
+                else:
+                    print(file.filename)
+
+
+                    
+            
+
             user_cart_items = db.session.execute(db.select(ShoppingCart).where(ShoppingCart.user_id == current_user.id)).fetchall()
             cart_items = []
             for item in user_cart_items:
@@ -191,8 +257,7 @@ def cart():
             total_price = 0
             for item in cart_items:
                 total_price += item.price
-            print(cart_items)
-            return render_template('cart.html', items=cart_items, total_price=total_price)
+            return render_template('cart.html', form=form, items=cart_items, total_price=total_price)
         else:
             flash('You have to be logged in to use the cart')
             return redirect(url_for('home'))

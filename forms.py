@@ -1,4 +1,4 @@
-from wtforms import StringField, SelectField, SubmitField, IntegerField, URLField, EmailField, PasswordField
+from wtforms import StringField, SelectField, SubmitField, IntegerField, URLField, EmailField, PasswordField, FileField
 from flask_wtf import FlaskForm
 from wtforms.validators import DataRequired, Length
 
@@ -20,3 +20,7 @@ class Login(FlaskForm):
     email = EmailField('Email Address', validators=[DataRequired()], render_kw={'class': 'w-25 custom-label'})
     password = PasswordField('Password', validators=[DataRequired()], render_kw={'class': 'w-25 custom-label'})
     submit = SubmitField('Login',render_kw={'class': 'btn btn-light'})
+
+class UploadFile(FlaskForm):
+    file = FileField('File')
+    submit = SubmitField('Upload file', render_kw={'class':'btn btn-primary'})
