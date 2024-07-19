@@ -127,17 +127,21 @@ def home():
 
 @app.route('/add-product', methods=['POST', 'GET'])
 def add_product():
-    form = AddProduct()
-    if form.validate_on_submit():
-        with app.app_context():
-            desc = request.form.get('description')
-            price = request.form.get('price')
-            img_url = request.form.get('img_url')
-            new_product = Products(description=desc, price=price, image_url=img_url)
-            db.session.add(new_product)
-            db.session.commit()
-        return redirect(url_for('add_product'))
-    return render_template('addproduct.html', form=form)
+    if current_user.id == 1:
+        form = AddProduct()
+        if form.validate_on_submit():
+            with app.app_context():
+                desc = request.form.get('description')
+                price = request.form.get('price')
+                img_url = request.form.get('img_url')
+                new_product = Products(description=desc, price=price, image_url=img_url)
+                db.session.add(new_product)
+                db.session.commit()
+            return redirect(url_for('add_product'))
+        return render_template('addproduct.html', form=form)
+    else:
+        flash('You have to be an admin to enter this URL!')
+        return redirect(url_for('home'))
 
 @app.route('/register', methods=['POST', 'GET'])
 def register():
@@ -383,16 +387,20 @@ def order_payed(order_num):
 
 @app.route('/check-order', methods=['POST', 'GET'])
 def check_order():
-    if request.method == 'POST':
-        try:
-            order_num = request.form.get('order_number')
-            order_obj = db.session.execute(db.select(Order).where(Order.order_id == order_num)).scalar()
-            items_ordered = retrieve_items_from_order_table(order=order_obj)
-            return render_template('checkorderdetails.html', order=order_obj, items=items_ordered)
-        except:
-            flash('Order number dont exist.')
-            return redirect(url_for('check_order'))
-    return render_template('checkorder.html')
+    if current_user.id == 1:
+        if request.method == 'POST':
+            try:
+                order_num = request.form.get('order_number')
+                order_obj = db.session.execute(db.select(Order).where(Order.order_id == order_num)).scalar()
+                items_ordered = retrieve_items_from_order_table(order=order_obj)
+                return render_template('checkorderdetails.html', order=order_obj, items=items_ordered)
+            except:
+                flash('Order number dont exist.')
+                return redirect(url_for('check_order'))
+        return render_template('checkorder.html')
+    else:
+        flash('You have to be an admin to enter this URL!')
+        return redirect(url_for('home'))
 
 @app.route('/about')
 def about():
