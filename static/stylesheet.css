@@ -37,6 +37,11 @@
     50% {border-color: transparent;}
 }
 
+body {
+    background: linear-gradient(to bottom, white, rgba(24, 110, 255, 1));
+    min-height: 100vh;
+}
+
 @keyframes typing {
     from {width: 0}
 }

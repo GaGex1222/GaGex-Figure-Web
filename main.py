@@ -14,8 +14,10 @@ from werkzeug.utils import secure_filename
 from dotenv import load_dotenv
 from forms import AddProduct, Register, Login, UploadFile
 import os
+import datetime
 import random
 from flask_mail import Mail, Message
+import json
 
 load_dotenv()
 login_manager = LoginManager()
@@ -25,6 +27,7 @@ app = Flask(__name__)
 login_manager.init_app(app=app)
 sql_url = os.getenv('SQL_URL')
 SECRET_KEY = os.getenv('SECRET_KEY')
+EMAIL_KEY = os.getenv('EMAIL_KEY')
 bootstrap = Bootstrap5(app=app)
 class Base(DeclarativeBase):
   pass
@@ -32,6 +35,12 @@ db = SQLAlchemy(model_class=Base)
 app.config['SECRET_KEY'] = SECRET_KEY
 app.config["SQLALCHEMY_DATABASE_URI"] = sql_url
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USERNAME'] = 'gald12123434@gmail.com'
+app.config['MAIL_PASSWORD'] = EMAIL_KEY
+mail = Mail(app)
 db.init_app(app)
 
 @login_manager.user_loader
@@ -45,6 +54,18 @@ class User(db.Model, UserMixin):
     email: Mapped[str] = mapped_column(String, unique=True)
     password: Mapped[str] = mapped_column(String)
     carts = db.relationship('ShoppingCart', backref='cart_owner')
+
+class Order(db.Model):
+    id: Mapped[int] = mapped_column(primary_key=True)
+    order_id: Mapped[int] = mapped_column(Integer)
+    user_id: Mapped[int] = mapped_column(Integer)
+    items: Mapped[str] = mapped_column(String)
+    full_name: Mapped[str] = mapped_column(String)
+    address: Mapped[str] = mapped_column(String)
+    country: Mapped[str] = mapped_column(String)
+    phone_number: Mapped[str] = mapped_column(String)
+    total_price: Mapped[str] = mapped_column(String)
+    date: Mapped[str] = mapped_column(String)
 
 class Products(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -67,6 +88,17 @@ def check_for_double_item_in_cart():
         all_item_ids_in_cart.append(cart.item_id)
     return all_item_ids_in_cart
 
+def retrieve_items_from_order_table(order):
+    items_ordered = order.items.split(',')
+    items_ordered_db_objects = []
+    for item in items_ordered:
+        item_ordered_db_object = db.session.execute(db.select(Products).where(Products.id == item)).scalar()
+        items_ordered_db_objects.append(item_ordered_db_object)
+    items_descs = []
+    for item in items_ordered_db_objects:
+        items_descs.append(item.description)
+    items_names_cleared = ', '.join(items_descs)
+    return items_names_cleared
 
 
 def check_valid_file(filename):
@@ -220,7 +252,6 @@ def cart():
                             prod_whitespace_seperated = prod.split(' ')
                             for prod_whitespaced in prod_whitespace_seperated:
                                 for p in all_prods:
-                                    print(f'prod_white {prod_whitespaced} p {p}')
                                     if prod_whitespaced.lower() in p.lower():
 
                                         product_to_add_to_cart = db.session.execute(db.select(Products).where(Products.description == p)).scalar()
@@ -273,6 +304,95 @@ def delete_cart_item():
         db.session.commit()
     return redirect(url_for('cart'))
 
+@app.route('/checkout', methods=['POST', 'GET'])
+def checkout():
+    user_cart = db.session.execute(db.select(ShoppingCart).where(ShoppingCart.user_id == current_user.id)).fetchall()
+    if len(user_cart) == 0:
+        flash('You have to have items in cart to make a purchase!')
+        return redirect(url_for('cart'))
+    with open(os.path.join('static', 'countries.json')) as file:
+        countries_data = json.load(file)
+        only_countries = []
+        for cell in countries_data:
+            only_countries.append(cell['name'])
+        print(only_countries)
+    cleared_items = []
+    for item in user_cart:
+        item = item[0]
+        product = db.session.execute(db.select(Products).where(Products.id == item.item_id)).scalar()
+        cleared_items.append(product)
+    total_price = 0
+    for item in cleared_items:
+        total_price += item.price
+    if request.method == 'POST':
+        first_name = request.form.get('firstname')
+        last_name = request.form.get('lastname')
+        full_name = f'{first_name} {last_name}'
+        address = request.form.get('address')
+        country = request.form.get('country')
+        today = str(datetime.datetime.today())
+        phone_number = request.form.get('phonenumber')
+        user_items_ids = []
+        for item in user_cart:
+            item = item[0]
+            user_items_ids.append(str(item.item_id))
+        items_csv = ','.join(user_items_ids)
+        order_num = ''
+        for _ in range(10):
+            order_num += str(random.randint(1, 9))
+        new_order = Order(
+            order_id=order_num,
+            user_id=current_user.id,
+            items=items_csv,
+            full_name=full_name,
+            address=address,
+            country=country,
+            phone_number=phone_number,
+            total_price=total_price,
+            date=today
+        )
+        db.session.add(new_order)
+        db.session.commit()
+
+
+        return redirect(url_for('order_payed', order_num=order_num))
+
+    return render_template('checkout.html', items=cleared_items, total_price=total_price, contries=only_countries)
+
+@app.route('/order-payed/<int:order_num>')
+def order_payed(order_num):
+    user_cart = db.session.execute(db.select(ShoppingCart).where(ShoppingCart.user_id == current_user.id)).fetchall()
+    order = db.session.execute(db.select(Order).where(Order.order_id == order_num)).scalar()
+    items_ordered = retrieve_items_from_order_table(order=order)
+    items_objs = []
+    print(items_ordered.split(','))
+
+    for item in items_ordered.split(','):
+        print(item)
+        item_obj = db.session.execute(db.select(Products).where(Products.description == item.strip())).scalar()
+        items_objs.append(item_obj)
+    total_price = 0
+    for item in items_objs:
+        total_price += item.price
+    for item in user_cart:
+        item = item[0]
+        db.session.delete(item)
+        db.session.commit()
+    
+    return render_template('orderpayed.html', order=order, items=items_ordered, total_price=total_price)
+
+@app.route('/check-order', methods=['POST', 'GET'])
+def check_order():
+    if request.method == 'POST':
+        try:
+            order_num = request.form.get('order_number')
+            order_obj = db.session.execute(db.select(Order).where(Order.order_id == order_num)).scalar()
+            items_ordered = retrieve_items_from_order_table(order=order_obj)
+            return render_template('checkorderdetails.html', order=order_obj, items=items_ordered)
+        except:
+            flash('Order number dont exist.')
+            return redirect(url_for('check_order'))
+    return render_template('checkorder.html')
 
 @app.route('/about')
 def about():

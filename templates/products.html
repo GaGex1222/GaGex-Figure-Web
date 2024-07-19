@@ -16,6 +16,11 @@
         background: linear-gradient(to bottom, white, rgba(24, 110, 255, 1));
         min-height: 100vh;
         }
+        .card-img-top {
+            height: 300px;
+            object-fit: cover;
+            object-position: top;
+        }
     </style>
 </head>
 <body style="background: linear-gradient(to bottom, white, rgba(24, 110, 255, 1));">
@@ -65,6 +70,5 @@
             </div>
         {% endfor %}
     </div>
-    {% include "footer.html" %}
 </body>
 </html>
