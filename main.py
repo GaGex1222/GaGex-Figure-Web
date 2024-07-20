@@ -314,12 +314,6 @@ def checkout():
     if len(user_cart) == 0:
         flash('You have to have items in cart to make a purchase!')
         return redirect(url_for('cart'))
-    with open(os.path.join('static', 'countries.json')) as file:
-        countries_data = json.load(file)
-        only_countries = []
-        for cell in countries_data:
-            only_countries.append(cell['name'])
-        print(only_countries)
     cleared_items = []
     for item in user_cart:
         item = item[0]
@@ -361,13 +355,17 @@ def checkout():
 
         return redirect(url_for('order_payed', order_num=order_num))
 
-    return render_template('checkout.html', items=cleared_items, total_price=total_price, contries=only_countries)
+    return render_template('checkout.html', items=cleared_items, total_price=total_price)
 
 @app.route('/order-payed/<int:order_num>')
 def order_payed(order_num):
-    user_cart = db.session.execute(db.select(ShoppingCart).where(ShoppingCart.user_id == current_user.id)).fetchall()
     order = db.session.execute(db.select(Order).where(Order.order_id == order_num)).scalar()
     items_ordered = retrieve_items_from_order_table(order=order)
+    msg = Message(subject='Thank you for your order!', sender='galalsops@gmail.com', recipients=[current_user.email])
+    msg.body = f"Hey {current_user.username}, We are happy that you decided to order from our website!\nOrder Number: {order.order_id}\nitems: {items_ordered}\naddress for delievery : {order.address}\ncountry : {order.country}\nTotal price : {order.total_price}\ndate of order : {order.date}"
+    mail.send(msg)
+    user_cart = db.session.execute(db.select(ShoppingCart).where(ShoppingCart.user_id == current_user.id)).fetchall()
+    
     items_objs = []
     print(items_ordered.split(','))
 
@@ -401,6 +399,27 @@ def check_order():
     else:
         flash('You have to be an admin to enter this URL!')
         return redirect(url_for('home'))
+
+@app.route('/contact-us', methods=['POST', 'GET'])
+def contact_us():
+    name = request.form.get('name')
+    email = request.form.get('email')
+    subject = request.form.get('subject')
+    order_number = request.form.get('order_number')
+    message = request.form.get('message')
+    if request.method == 'POST':
+        msg = Message(subject=f'{request.form.get('subject')} (GaGex Figures Website!)', sender=f'{request.form.get('email')}', recipients=['gald12123434@gmail.com', 'galalsops@gmail.com'])
+        msg.body = (
+            f"Name: {name}\n"
+            f"Email: {email}\n"
+            f"Subject: {subject}\n"
+            f"Order Number: {order_number}\n"
+            f"Message: {message}"
+        )
+        mail.send(msg)
+        flash("Your message has been sent successfully!")
+        return redirect(url_for('contact_us'))
+    return render_template('contactus.html')
 
 @app.route('/about')
 def about():
