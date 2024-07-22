@@ -1,5 +1,5 @@
 Flask==3.0.3
-Flask-Bootstrap5==2.2.0
+Flask-Bootstrap5==0.1.dev1
 Flask-CKEditor==0.4.3
 Flask-Gravatar==0.5.0
 Flask-Login==0.6.2
